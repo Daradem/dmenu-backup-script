@@ -1,0 +1,29 @@
+#!/bin/sh
+
+pgrep -x dmenu && exit
+
+#	Show the user available usb-sticks.
+available=$(lsblk -lp | grep sdb | grep part | grep "t /" | awk '{print $7, "(" $4 ")"}')
+[[ "$available" = "" ]] && exit 1
+
+#	Ask the user where to backup the files.
+chosen=$(echo "$available" | dmenu -i -p "Backup in which drive?" | awk '{print $1}')
+[[ "$chosen" = "" ]] && exit 1
+
+#	There are two usb
+#if [[ "$available" ]]
+
+#	Ask the user which files to backup.
+files=" .\n Documents"
+fchosen=$(echo -e "$files" | dmenu -i -p "Which files backup?")
+
+#	Verify that backup folder exist.
+if [[ ! -d "$chosen/backups" ]]; then
+	sudo mkdir -p "$chosen/backups"
+fi
+
+#	Do required operation.
+case "$fchosen" in
+	" .") sudo cp -fR ~/{.config,.z*,.x*,.vimrc,.tmux*,.inputrc,.bash*} $chosen/backups/ && pgrep -x dunst && notify-send -u critical "$fchosen files copied to $chosen." ;;
+	" Documents") sudo cp -fR ~/{Books,Documents} $chosen/backups/ && pgrep -x dunst && notify-send -u critical "$fchosen files copied to $chosen." ;;
+esac
